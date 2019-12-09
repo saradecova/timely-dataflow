@@ -3,14 +3,19 @@ extern crate timely;
 use timely::dataflow::{InputHandle};
 use timely::dataflow::operators::{Concat, ConnectLoop, Filter, Input, Feedback, Map};
 use timely::logging::{TimelyEvent};
+use timely::progress::reachability::TrackerEvent;
 
 fn main() {
     // initializes and runs a timely dataflow.
     let config = timely::Configuration::from_args(::std::env::args()).unwrap();
     timely::execute(config, |worker| {
         
-        worker.log_register().insert::<TimelyEvent,_>("timely", |_time, data|
-            data.iter().for_each(|x| println!("LOG1: {:?}", x.2))
+        worker.log_register().insert::<TimelyEvent,_>("timely", |_, data|
+            data.iter().for_each(|x| println!("{:?}", x.2))
+        );
+
+        worker.log_register().insert::<TrackerEvent,_>("timely/tracker", |_, data|
+            data.iter().for_each(|x| println!("{:?}", x.2))
         );
         
         let mut input = InputHandle::new();

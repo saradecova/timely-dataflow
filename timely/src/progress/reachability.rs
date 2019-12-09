@@ -474,6 +474,7 @@ impl<T:Timestamp> Tracker<T> {
                 timestamp: format!("{:?}", time.clone()),
                 delta: value,
             });
+            self.print_trace(logger);
         }
         self.target_changes.update((target, time), value);
     }
@@ -487,6 +488,7 @@ impl<T:Timestamp> Tracker<T> {
                 timestamp: format!("{:?}", time.clone()),
                 delta: value,
             });
+            self.print_trace(logger);
         }
         self.source_changes.update((source, time), value);
     }
@@ -571,23 +573,28 @@ impl<T:Timestamp> Tracker<T> {
                     },
                     pointstamps: target.pointstamps.updates().iter().map(|x| format!("{:?}", x)).collect(),
                     implications: target.implications.updates().iter().map(|x| format!("{:?}", x)).collect(),
+                    worklist: self.worklist.iter()
+                        .filter(|Reverse((_,loc,_))| loc.node == op_n && loc.port == Port::Target(tg_n))
+                        .map(|Reverse((t,_,d))| format!("({:?}, {})", t, d)).collect()
                 }
             }).collect::<Vec<_>>();
-            ports.extend(per_op.sources.iter().enumerate().map(|(tg_n, source)| {
+            ports.extend(per_op.sources.iter().enumerate().map(|(sc_n, source)| {
                 DebugEventPort {
                     location: Location {
                         node: op_n,
-                        port: Port::Target(tg_n),
+                        port: Port::Source(sc_n),
                     },
                     pointstamps: source.pointstamps.updates().iter().map(|x| format!("{:?}", x)).collect(),
                     implications: source.implications.updates().iter().map(|x| format!("{:?}", x)).collect(),
+                    worklist: self.worklist.iter()
+                        .filter(|Reverse((_,loc,_))| loc.node == op_n && loc.port == Port::Source(sc_n))
+                        .map(|Reverse((t,_,d))| format!("({:?}, {})", t, d)).collect()
                 }
             }));
             ports.into_iter()
         }).collect::<Vec<_>>();
         logger.log(DebugEvent {
             ports,
-            worklist: self.worklist.iter().map(|Reverse((t,loc,d))| (format!("{:?}", t),loc.clone(),*d)).collect(),
         });
     }
 
@@ -599,6 +606,7 @@ impl<T:Timestamp> Tracker<T> {
                 port: port,
                 timestamp: format!("{:?}", time),
             });
+            self.print_trace(logger);
         }
     }
 
@@ -610,6 +618,7 @@ impl<T:Timestamp> Tracker<T> {
                 port: port,
                 timestamp: format!("{:?}", time),
             });
+            self.print_trace(logger);
         }
     }
 
@@ -860,13 +869,13 @@ pub struct DebugEventPort {
     location: Location,
     pointstamps: Vec<String>,
     implications: Vec<String>,
+    worklist: Vec<String>,
 }
 
 #[derive(Abomonation, Debug, Clone)]
 /// Log event
 pub struct DebugEvent {
     ports: Vec<DebugEventPort>,
-    worklist: Vec<(String, Location, i64)>,
 }
 
 #[derive(Abomonation, Debug, Clone)]
