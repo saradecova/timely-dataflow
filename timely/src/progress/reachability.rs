@@ -680,7 +680,6 @@ impl<T:Timestamp> Tracker<T> {
         //       will discover zero-change times when we first visit them, as no further
         //       changes can be made to them once we complete them.
         while let Some(Reverse((time, location, mut diff))) = self.worklist.pop() {
-
             // Drain and accumulate all updates that have the same time and location.
             while self.worklist.peek().map(|x| ((x.0).0 == time) && ((x.0).1 == location)).unwrap_or(false) {
                 diff += (self.worklist.pop().unwrap().0).2;
@@ -693,13 +692,12 @@ impl<T:Timestamp> Tracker<T> {
                     // Update to an operator input.
                     // Propagate any changes forward across the operator.
                     Port::Target(port_index) => {
-                        self.log_propagate_target(location.node, port_index, time.clone());
 
                         let changes =
                         self.per_operator[location.node]
                             .targets[port_index]
                             .implications
-                            .update_iter(Some((time, diff)));
+                            .update_iter(Some((time.clone(), diff)));
 
                         for (time, diff) in changes {
                             let nodes = &self.nodes[location.node][port_index];
@@ -713,18 +711,17 @@ impl<T:Timestamp> Tracker<T> {
                             }
                             self.pushed_changes.update((location, time), diff);
                         }
+                        self.log_propagate_target(location.node, port_index, time);
                     }
                     // Update to an operator output.
                     // Propagate any changes forward along outgoing edges.
                     Port::Source(port_index) => {
 
-                        self.log_propagate_source(location.node, port_index, time.clone());
-
                         let changes =
                         self.per_operator[location.node]
                             .sources[port_index]
                             .implications
-                            .update_iter(Some((time, diff)));
+                            .update_iter(Some((time.clone(), diff)));
 
                         for (time, diff) in changes {
                             for new_target in self.edges[location.node][port_index].iter() {
@@ -736,6 +733,7 @@ impl<T:Timestamp> Tracker<T> {
                             }
                             self.pushed_changes.update((location, time), diff);
                         }
+                        self.log_propagate_source(location.node, port_index, time);
                     },
                 };
             }
