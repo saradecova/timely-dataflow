@@ -6,7 +6,7 @@ use timely::progress::reachability::Builder;
 
 fn main() {
     // allocate a new empty topology builder.
-    let mut builder = Builder::<usize>::new();
+    let mut builder = Builder::<usize>::new(vec![]);
 
     // Each node with one input connected to one output.
     builder.add_node(0, 1, 1, vec![vec![Antichain::from_elem(0)]]);
