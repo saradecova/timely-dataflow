@@ -9,13 +9,12 @@ fn main() {
     // initializes and runs a timely dataflow.
     let config = timely::Configuration::from_args(::std::env::args()).unwrap();
     timely::execute(config, |worker| {
-        
         worker.log_register().insert::<TimelyEvent,_>("timely", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         worker.log_register().insert::<TrackerEvent,_>("timely/tracker", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
         
         let mut input = InputHandle::new();

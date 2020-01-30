@@ -7,11 +7,11 @@ use timely::progress::reachability::TrackerEvent;
 fn main() {
     timely::execute_from_args(std::env::args(), move |worker| {
         worker.log_register().insert::<TimelyEvent,_>("timely", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         worker.log_register().insert::<TrackerEvent,_>("timely/tracker", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         // must specify types as nothing else drives inference.

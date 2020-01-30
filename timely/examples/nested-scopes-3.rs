@@ -14,11 +14,11 @@ fn main() {
     args.next();
     timely::execute_from_args(std::env::args(), move |worker| {
         worker.log_register().insert::<TimelyEvent,_>("timely", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         worker.log_register().insert::<TrackerEvent,_>("timely/tracker", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         // must specify types as nothing else drives inference.
@@ -34,7 +34,7 @@ fn main() {
                     .concat(&loop_stream)
                     .map(|x| if x % 2 == 0 { x / 2 } else { 3 * x + 1 })
                     .partition(2, |x| if x > 2 { (0, x) } else { (1, x) });
-                
+
                 branches[0].connect_loop(inside_loop_handle);
                 branches[1]
                     .leave()
