@@ -14,22 +14,22 @@ fn main() {
     args.next();
     timely::execute_from_args(std::env::args(), move |worker| {
         worker.log_register().insert::<TimelyEvent,_>("timely", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         worker.log_register().insert::<TrackerEvent,_>("timely/tracker", |_, data|
-            data.iter().for_each(|x| println!("{:?}", x.2))
+            data.iter().for_each(|x| println!("{}", serde_json::to_string(&x.2).unwrap()))
         );
 
         // must specify types as nothing else drives inference.
         let mut input = worker.dataflow::<u64,_,_>(|outer_scope| {
             let (input, stream) = outer_scope.new_input::<u64>();
             outer_scope.scoped::<Product<u64,u32>,_,_>("First Inner Scope", |child1| {
-                
+
                 // Create a feedback operator for First subscope.
                 let (loop_instream_1, loop_outstream_1) =
                     child1.feedback(Product {outer: 0, inner: 1});
-                                        
+
                 let stream =
                 stream
                     .enter(child1)  // Enter First subscope
@@ -48,7 +48,7 @@ fn main() {
                         .concat(&loop_outstream_2)
                         .map(|x| if x % 2 == 0 { x / 2 } else { 3 * x + 1 })
                         .filter(|x| x > &1);
-                
+
                     // Close loop of the Second inner subscope and leave subscope
                     stream.connect_loop(loop_instream_2);
                     stream.leave()
