@@ -21,11 +21,14 @@ bincode= ["timely_communication/bincode"]
 [dependencies]
 serde = "1.0"
 serde_derive = "1.0"
+serde_json = { version = "1.0.41" }
 abomonation = "0.7.3"
 abomonation_derive = "0.3"
 timely_bytes = { path = "../bytes", version = "0.10" }
 timely_logging = { path = "../logging", version = "0.10" }
 timely_communication = { path = "../communication", version = "0.10" }
+hdrhist = "0.5.0"
+
 
 [dev-dependencies]
 timely_sort="0.1.6"
